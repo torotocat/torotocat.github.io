@@ -1,0 +1,382 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>抽象的js语法 | Hexo</title><meta name="author" content="TorontoCat"><meta name="copyright" content="TorontoCat"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="JavaScript语法的特殊之处和注意事项，包括数据类型、变量声明、字符串处理等核心概念">
+<meta property="og:type" content="article">
+<meta property="og:title" content="抽象的js语法">
+<meta property="og:url" content="http://example.com/2024/05/08/%E6%8A%BD%E8%B1%A1%E7%9A%84js%E8%AF%AD%E6%B3%95/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="JavaScript语法的特殊之处和注意事项，包括数据类型、变量声明、字符串处理等核心概念">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://pbs.twimg.com/profile_images/1904178056278999040/ZlNAiRHg_400x400.jpg">
+<meta property="article:published_time" content="2024-05-08T06:20:00.000Z">
+<meta property="article:modified_time" content="2025-01-15T10:30:00.000Z">
+<meta property="article:author" content="TorontoCat">
+<meta property="article:tag" content="前端开发">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pbs.twimg.com/profile_images/1904178056278999040/ZlNAiRHg_400x400.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "抽象的js语法",
+  "url": "http://example.com/2024/05/08/%E6%8A%BD%E8%B1%A1%E7%9A%84js%E8%AF%AD%E6%B3%95/",
+  "image": "https://pbs.twimg.com/profile_images/1904178056278999040/ZlNAiRHg_400x400.jpg",
+  "datePublished": "2024-05-08T06:20:00.000Z",
+  "dateModified": "2025-01-15T10:30:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "TorontoCat",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2024/05/08/%E6%8A%BD%E8%B1%A1%E7%9A%84js%E8%AF%AD%E6%B3%95/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"No results found for: ${query}","hits_stats":"${hits} articles found"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '抽象的js语法',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><script>window.HOME_BG='https://w.wallhaven.cc/full/6l/wallhaven-6ld1xw.jpg';window.POST_BG='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRefBcAFVEhc6x1r8k66Wzzhn3KORrZZ6csXg&s';</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(https://w.wallhaven.cc/full/6l/wallhaven-6ld1xw.jpg);"></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://w.wallhaven.cc/full/zp/wallhaven-zpxzrj.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Hexo</span></a><a class="nav-page-title" href="/"><span class="site-name">抽象的js语法</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> Search</span></span></div></div></nav><div id="post-info"><h1 class="post-title">抽象的js语法</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2024-05-08T06:20:00.000Z" title="Created 2024-05-08 14:20:00">2024-05-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2025-01-15T10:30:00.000Z" title="Updated 2025-01-15 18:30:00">2025-01-15</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/">前端开发</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="抽象的js语法"><a href="#抽象的js语法" class="headerlink" title="抽象的js语法"></a>抽象的js语法</h1><p>1.浮点数和正数混用，导致正数最大值更小。</p>
+<p>2.字符串单引号双引号无所谓</p>
+<p>3.比较时类型会自动转换，&#x3D;&#x3D;号严禁使用</p>
+<p>4.NaN和谁都不等，isNaN判断</p>
+<p>5.注意浮点数1&#x2F;3不等于1-2&#x2F;3</p>
+<p>6.可以使用BigInt，方法是整数后加一个n，9223372036854775808n</p>
+<p>7.js对象是键值对</p>
+<p>8.js是动态语言，变量类型中间可以变</p>
+<p>9.js有个严重的问题，可以不用变量声明号，导致会自动变成全局变量，如果有全局和函数内都用了var，那么就会导致运行错误。</p>
+<p>10.多行字符串用&#96;&#96;反引号</p>
+<p>11.js的字符串length不用加括号</p>
+<p>12.js的字符串不可变，可以用数组下标访问，但是不会变</p>
+<p>13.arr.length&#x3D;x可以调整arr数组的大小</p>
+<p>14.超出数组索引也会自动调整数组大小</p>
+<p>15.arr啥都可以放</p>
+<p>16.arr</p>
+<p>slice 和substring相同，另外都是一个值的话到结尾，比如arr.slice(3)从3到结尾</p>
+<p>push pop是队列</p>
+<p>unshift是栈添加，shift是栈溢出，在头部<br>splice(x1,x2,x3…)从x1位置删除x2个元素，然后把x3等等元素添加上去</p>
+<p>concat([])拼接新的，并不改变原来的</p>
+<p>join字符串</p>
+<p>17.遍历数组的时候，let x of a和let x in a不一样，</p>
+<p>for of可以使用内置的foreeach方法，并且数组是一个对象，添加对象属性依然会输出。</p>
+<p>18.let x&#x3D;function abs(x)和function abs()完全一样</p>
+<p>19.函数甚至可以传入参数不一样,arguments是传入参数数组，每个函数都有。</p>
+<p>20…rest参数代表函数的多余的参数,没有会接收一个空数组，正常参数没接收是undefined； </p>
+<p>21.JSON.stringify(foo())json转字符串</p>
+<p>22.return语句千万别分行，因为会自动加；</p>
+<p>23.JavaScript的函数定义有个特点，它会先扫描整个函数体的语句，把所有用<code>var</code>申明的变量“提升”到函数顶部,赋值则不会。建议使用let</p>
+<p>24.名字空间:把全局变量绑定到一个全局变量里，减少变量冲突</p>
+<p>25.var作用域是函数内部起效，所以函数里面有个for循环里有var i&#x3D;1等等会保留（太抽象了）</p>
+<ol start="26">
+<li></li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;x, y&#125; = &#123; <span class="attr">name</span>: <span class="string">&#x27;小明&#x27;</span>, <span class="attr">x</span>: <span class="number">100</span>, <span class="attr">y</span>: <span class="number">200</span>&#125;;</span><br><span class="line"><span class="comment">// 语法错误: Uncaught SyntaxError: Unexpected token =</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(&#123;x, y&#125; = &#123; <span class="attr">name</span>: <span class="string">&#x27;小明&#x27;</span>, <span class="attr">x</span>: <span class="number">100</span>, <span class="attr">y</span>: <span class="number">200</span>&#125;);正确赋值</span><br></pre></td></tr></table></figure>
+
+<p>27.函数的this指针要极为小心，直接调用函数的时候this会指向全局，strict模式会返回错误,指向undefined。this指针只在第一个函数内指向当前对象。</p>
+<p>this指针会导致错误，建议用apply函数或call函数，apply是输入数组，call是按顺序输入。this指针是null的时候调用原函数。</p>
+<p>28.js的函数参数甚至可以有函数,传入的函数参数不需要带括号</p>
+<p>29.arr.map(f)对于所有的数列都用这个f    [  a,b,c,d]&#x3D;[fa,fb,fc,f(d)] 求数列。<strong>注意map传参：当前元素值，当前索引，当前数组</strong>,filter也是</p>
+<p>arr.reduce(f) 对所有数列用累计运算 [x1, x2, x3, x4].reduce(f) &#x3D; f(f(f(x1, x2), x3), x4)  </p>
+<p>arr.reduce(f,a,b,c)就是数列额外加上a，b，c，求值</p>
+<p>30.arr.sort默认按字符串排序</p>
+<p>31.arr.every()判断是不是所有元素都满足条件</p>
+<p>32.find()findIndex是找符合条件的第一个元素和下标</p>
+<p>33.闭包（？）</p>
+<ol start="34">
+<li></li>
+</ol>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 错误写法：被识别成函数体，内部 `foo: x` 语法无效</span></span><br><span class="line"><span class="keyword">const</span> <span class="title function_">wrong</span> = x =&gt; &#123; <span class="attr">foo</span>: x &#125;; </span><br><span class="line"><span class="comment">// 调用时会报错，因为函数体里 `foo: x` 不是合法语法</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 正确写法：用 () 明确返回对象</span></span><br><span class="line"><span class="keyword">const</span> <span class="title function_">right</span> = x =&gt; (&#123; <span class="attr">foo</span>: x &#125;); </span><br><span class="line"><span class="comment">// 调用 right(10) 会返回 &#123; foo: 10 &#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>35.箭头函数可以解决this指针乱指的问题</p>
+<p>36.css我们先找方向，再对齐</p>
+<p>37.window.innerWidth,window.outerWidth</p>
+<p>screen表示屏幕</p>
+<p>navigator浏览器 useAgent是浏览器类型</p>
+<p>location是页面url信息，protocol表示协议，search表示查询字符串</p>
+<p>location.reload是重载，location.assign设置新的url地址</p>
+<p>35.js可以获取页面的cookie，设置httpOnly可以避免安全隐患</p>
+<p>36.history.back()慎用，建议使用history.pushState(state, ‘’, newUrl);</p>
+<p>37.document.getElementById(),getElementsByTagName,getElementsByClassName</p>
+<p>38.innerText可以修改文本，并且可以避免<script>alert("Hi")</script>这样的注入，innerHTML可以修改文本。</p>
+<p>style.可以设置格式</p>
+<p>1.splice（起始操作位置，删除元素，添加元素）永远返回删除数组</p>
+<p>2.js&#x3D;ECMAScript+WebAPIs </p>
+<p>Node.js&#x3D;ECMAScript+ServerAPIs</p>
+<p>3.DOM 是用来动态修改 HTML 的，其目的是开发网页特效及用户交互。</p>
+<h4 id="4-DOM-节点"><a href="#4-DOM-节点" class="headerlink" title="4.DOM 节点"></a>4.DOM 节点</h4><ol>
+<li>【元素节点】其实就是 HTML 标签，如上图中 <code>head</code>、<code>div</code>、<code>body</code> 等都属于元素节点。</li>
+<li>【属性节点】是指 HTML 标签中的属性，如上图中 <code>a</code> 标签的 <code>href</code> 属性、<code>div</code> 标签的 <code>class</code> 属性。</li>
+<li>【文本节点】是指 HTML 标签的文字内容，如 <code>title</code> 标签中的文字。</li>
+<li>【根节点】特指 <code>html</code> 标签。</li>
+</ol>
+<p>5.类名可以有多个，通过box.classList.add&#x2F;remove增加删除类名</p>
+<h4 id="6-自定义属性"><a href="#6-自定义属性" class="headerlink" title="6.自定义属性"></a>6.自定义属性</h4><p>在html5中推出来了专门的data-自定义属性  </p>
+<p>在标签上一律以data-开头</p>
+<p>在DOM对象上一律以dataset对象方式获取</p>
+<p>如data-id，用dataset.id存储</p>
+<p>7.间歇函数：setInterval(函数，次数);</p>
+<p>8.addEventListener添加事件监听</p>
+<p>9.click单击，dblclick双击，像这种称为事件类型,后面跟事件处理函数,函数的第一个参数叫事件对象，</p>
+<p> box.addEventListener(‘click’, function (e) {<br>      console.log(‘任意事件类型被触发后，相关信息会以对象形式被记录下来…’);</p>
+<pre><code>  // 事件回调函数的第1个参数即所谓的事件对象
+  console.log(e)
+</code></pre>
+<p>就是这个e，e.type事件类型，e.clientX&#x2F;Y相对浏览器窗口位置，e.offsetX&#x2F;Y相对当前DOM元素位置.window.event也可以获取事件对象，不推荐。</p>
+<p>10.事件类型</p>
+<h3 id="一、鼠标事件"><a href="#一、鼠标事件" class="headerlink" title="一、鼠标事件"></a><strong>一、鼠标事件</strong></h3><ul>
+<li><code>click</code>：点击鼠标左键（或触摸屏幕）时触发。</li>
+<li><code>dblclick</code>：双击鼠标左键时触发。</li>
+<li><code>mousedown</code>：按下鼠标任意键时触发。</li>
+<li><code>mouseup</code>：释放鼠标任意键时触发。</li>
+<li><code>mouseover</code>：鼠标移入元素（包括子元素）时触发。</li>
+<li><code>mouseout</code>：鼠标移出元素（包括子元素）时触发。</li>
+<li><code>mouseenter</code>：鼠标移入元素（不包含子元素）时触发。</li>
+<li><code>mouseleave</code>：鼠标移出元素（不包含子元素）时触发。</li>
+<li><code>mousemove</code>：鼠标在元素上移动时持续触发。</li>
+</ul>
+<h3 id="二、键盘事件"><a href="#二、键盘事件" class="headerlink" title="二、键盘事件"></a><strong>二、键盘事件</strong></h3><ul>
+<li><code>keydown</code>：按下键盘任意键时触发（持续按下会重复触发）。</li>
+<li><code>keyup</code>：释放键盘任意键时触发。</li>
+</ul>
+<h3 id="三、表单事件"><a href="#三、表单事件" class="headerlink" title="三、表单事件"></a><strong>三、表单事件</strong></h3><ul>
+<li><code>input</code>：输入框内容实时变化时触发（如输入文字、删除内容）。</li>
+<li><code>change</code>：表单元素值改变且失去焦点时触发（如下拉框选择、复选框勾选）。</li>
+<li><code>submit</code>：表单提交时触发（如点击提交按钮）。</li>
+<li><code>focus</code>：元素获得焦点时触发（如点击输入框）。</li>
+<li><code>blur</code>：元素失去焦点时触发（如离开输入框）。</li>
+</ul>
+<h3 id="四、窗口与页面事件"><a href="#四、窗口与页面事件" class="headerlink" title="四、窗口与页面事件"></a><strong>四、窗口与页面事件</strong></h3><ul>
+<li><code>load</code>：页面所有资源（图片、脚本等）加载完成时触发。</li>
+<li><code>DOMContentLoaded</code>：HTML 解析完成（无需等待资源加载）时触发。</li>
+<li><code>resize</code>：浏览器窗口大小改变时触发。</li>
+<li><code>scroll</code>：页面滚动时持续触发。</li>
+<li><code>beforeunload</code>：页面即将关闭或刷新时触发（可提示用户保存数据）。</li>
+</ul>
+<h3 id="五、触摸事件（移动端）"><a href="#五、触摸事件（移动端）" class="headerlink" title="五、触摸事件（移动端）"></a><strong>五、触摸事件（移动端）</strong></h3><ul>
+<li><code>touchstart</code>：手指触摸屏幕开始时触发。</li>
+<li><code>touchmove</code>：手指在屏幕上移动时持续触发。</li>
+<li><code>touchend</code>：手指离开屏幕时触发。</li>
+</ul>
+<h3 id="六、其他事件"><a href="#六、其他事件" class="headerlink" title="六、其他事件"></a><strong>六、其他事件</strong></h3><ul>
+<li><code>copy</code>：复制内容时触发。</li>
+<li><code>paste</code>：粘贴内容时触发。</li>
+<li><code>error</code>：资源（如图片、脚本）加载失败时触发。</li>
+<li><code>select</code>：选中文本内容时触发。</li>
+<li><code>wheel</code>：滚动鼠标滚轮或触控板时触发。</li>
+</ul>
+<p>11.如果将函数 A 做为参数传递给函数 B 时，我们称函数 A 为回调函数。</p>
+<p>12.环境对象指的是函数内部特殊的变量 <code>this</code>，它代表着当前函数运行时所处的环境。</p>
+<p>13.事件流是对事件执行过程的描述，了解事件的执行过程有助于加深对事件的理解，提升开发实践中对事件运用的灵活度。</p>
+<p>![event](C:\Users\Administrator\Desktop\JavaScript基础笔记和作业\web APIs第三天\02-笔记\assets\event.png)</p>
+<p>如上图所示，任意事件被触发时总会经历两个阶段：【捕获阶段】和【冒泡阶段】。</p>
+<p>简言之，捕获阶段是【从父到子】的传导过程，冒泡阶段是【从子向父】的传导过程。</p>
+<p>14.执行顺序：</p>
+<p>冒泡阶段：从子事件到父事件依次执行</p>
+<p>捕获阶段：从父事件到子事件依次执行</p>
+<p>addEventListener第三个参数为true表示捕获阶段触发，false表示冒泡阶段触发，默认false</p>
+<p>15.mouseover和mouseout有冒泡效果，mouseenter和mouseleave没有冒泡效果(推荐),事件对象中的 <code>ev.stopPropagation</code> 方法，专门用来阻止事件冒泡,此事件和此事件的子事件都不会冒泡了，相当于在水面上有个挡板把泡泡堵住了</p>
+<p>16.事件委托：事件流可以用来优化，比如说1w个按钮，点击有触发效果。有同一个祖先元素，这个时候我们可以把事件绑定到祖先元素，ev.target.tagName&#x3D;&#x3D;&#x3D;’’然后来优化事件监听</p>
+<p>17.dom的增删改查</p>
+<ul>
+<li><p><code>createElement</code> 动态创建任意 DOM 节点</p>
+</li>
+<li><p><code>cloneNode</code> 复制现有的 DOM 节点，传入参数 true 会复制所有子节点</p>
+</li>
+<li><p><code>appendChild</code> 在末尾（结束标签前）插入节点</p>
+</li>
+<li><p>insertBefore父节点中的子节点之前插入</p>
+</li>
+<li><p>父节点.removeChild(子节点)删除子节点</p>
+<ol start="18">
+<li></li>
+</ol>
+<ul>
+<li><code>childNodes</code> 获取全部的子节点，回车换行会被认为是空白文本节点</li>
+<li><code>children</code> 只获取元素类型节点</li>
+<li><code>parentNode</code> 获取父节点，以相对位置查找节点，实际应用中非常灵活。</li>
+<li><code>previousSibling</code> 获取前一个节点，以相对位置查找节点，实际应用中非常灵活。</li>
+<li><code>nextSibling</code> 获取后一个节点，以相对位置查找节点，实际应用中非常灵活。</li>
+</ul>
+<p>19.setTimeOut(回调函数，延迟时间),过延迟时间执行回调函数，返回timerId</p>
+<p>20.clearTimeout(timerId)清除延时函数</p>
+<p>21.location (地址) 它拆分并保存了 URL 地址的各个组成部分， 它是一个对象</p>
+<table>
+<thead>
+<tr>
+<th>属性&#x2F;方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>href</td>
+<td>属性，获取完整的 URL 地址，赋值时用于地址的跳转</td>
+</tr>
+<tr>
+<td>search</td>
+<td>属性，获取地址中携带的参数，符号 ？后面部分</td>
+</tr>
+<tr>
+<td>hash</td>
+<td>属性，获取地址中的啥希值，符号 # 后面部分</td>
+</tr>
+<tr>
+<td>reload()</td>
+<td>方法，用来刷新当前页面，传入参数 true 时表示强制刷新</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<p>22.箭头函数：{}必须要有return，let newlist&#x3D;list.map(item&#x3D;&gt;{return <code>&lt;li&gt;$&#123;item&#125;&lt;/li&gt;</code>}).join(‘<br>‘); 简写了就不用直接返回</p>
+<p>23.<code>alert-success</code> 和 <code>alert-danger</code> 是 Bootstrap 内置的类，无需自定义样式即可实现颜色效果。</p>
+<p>24.serialize:注意！serialize通过name字段获取信息，必须有name字段</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">const form=document.querySelector(&#x27;#login-form .username .password&#x27;)</span><br><span class="line">const data=serialize(form, &#123; hash: true, empty: true &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>25.axios 的配置项 params 对应査询参数(query)，而配置项 data 对应请求体(body)</p>
+<p>26.伪数组：let obj &#x3D; { 0: ‘老李’, 1: ‘老刘’ }访问的话是obj[0]</p>
+<p>27.react的App.js函数必须用驼峰命名，否则不对</p>
+<p>28.react通过对象React 要求状态更新必须通过创建<strong>新对象</strong>来实现，而不是直接修改现有对象。这是因为：</p>
+<ul>
+<li>React 通过比较对象引用（内存地址）来检测状态变化。</li>
+<li>如果直接修改现有对象（如<code>shape.position.x += dx</code>），对象引用不会改变，React 可能无法检测到变化，导致不重新渲染。</li>
+</ul>
+<ol start="29">
+<li></li>
+</ol>
+<figure class="highlight jsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 初始状态定义</span></span><br><span class="line"><span class="keyword">const</span> initialList = [</span><br><span class="line">  &#123; <span class="attr">id</span>: <span class="number">0</span>, <span class="attr">title</span>: <span class="string">&#x27;Big Bellies&#x27;</span>, <span class="attr">seen</span>: <span class="literal">false</span> &#125;,</span><br><span class="line">  &#123; <span class="attr">id</span>: <span class="number">1</span>, <span class="attr">title</span>: <span class="string">&#x27;Lunar Landscape&#x27;</span>, <span class="attr">seen</span>: <span class="literal">false</span> &#125;,</span><br><span class="line">  &#123; <span class="attr">id</span>: <span class="number">2</span>, <span class="attr">title</span>: <span class="string">&#x27;Terracotta Army&#x27;</span>, <span class="attr">seen</span>: <span class="literal">true</span> &#125;,</span><br><span class="line">];</span><br><span class="line"></span><br><span class="line"><span class="comment">// 两个状态都直接引用 initialList</span></span><br><span class="line"><span class="keyword">const</span> [myList, setMyList] = <span class="title function_">useState</span>(initialList);</span><br><span class="line"><span class="keyword">const</span> [yourList, setYourList] = <span class="title function_">useState</span>(initialList);</span><br></pre></td></tr></table></figure>
+
+<p>会有意想不到的错误，因为js里用的是引用传递，</p>
+<p>30.useRef在渲染阶段更新的值不会更新。普通变量每次渲染就重置变量，但是useRef的就不会被重置, <strong><code>useRef</code> 是组件级别的 Hook，每个组件实例会单独维护自己的 <code>ref</code></strong>,</p>
+<p>31.apply,call用法：</p>
+<p>函数.apply(this指针,数组)</p>
+<p>函数.call(this指针，数组)</p>
+<p>重要：apply和call可以用作继承但不要用作继承，因为现代es6语法用了类，下面就错误了</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Parent</span> &#123;</span><br><span class="line">  <span class="title function_">constructor</span>(<span class="params">name</span>) &#123;</span><br><span class="line">    <span class="variable language_">this</span>.<span class="property">name</span> = name;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">Child</span>(<span class="params">name, age</span>) &#123;</span><br><span class="line">  <span class="title class_">Parent</span>.<span class="title function_">call</span>(<span class="variable language_">this</span>, name); <span class="comment">// ❌ 报错！类不能通过call直接调用</span></span><br><span class="line">  <span class="variable language_">this</span>.<span class="property">age</span> = age;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>非严格模式下，this指针参数位null ，undefined会变成全局对象。，严格模式下还是null和undefined</p>
+<p>32.除了var会变量提升，函数也会</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="http://example.com">TorontoCat</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="http://example.com/2024/05/08/%E6%8A%BD%E8%B1%A1%E7%9A%84js%E8%AF%AD%E6%B3%95/">http://example.com/2024/05/08/%E6%8A%BD%E8%B1%A1%E7%9A%84js%E8%AF%AD%E6%B3%95/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/">前端开发</a></div><div class="post-share"><div class="social-share" data-image="https://pbs.twimg.com/profile_images/1904178056278999040/ZlNAiRHg_400x400.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2024/06/12/%E8%AE%BA%E5%8A%9B%E5%B7%A5%E6%80%9D%E7%BB%B4/" title="论力工思维"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">论力工思维</div></div><div class="info-2"><div class="info-item-1">力工思维火起来，说明思想上的现代化已经基本结束了。按照文明的四季理论，韩国差不多已经走到了文明的秋冬，也就是衰退期了。 韩国能够现代化，就是靠的无数，在现代人看起来非常蠢的力工。能够忍受超长工时，剥削，顶着外来流动人口的帽子，冒着被抓进看守所的风险，被计生罚款一年工资，还能坚持生到男孩的力工们。在城市化的时候，再依靠绑定户口教育的房地产收割力工们的韩元。力工也是幸福的，在他们看来，自己完成了传宗接代的使命，孩子说不定还上了二三本的大学，至少比当农民工强多了。 正因为有前现代的燃料做铺垫的，韩国才能现代化。韩国改开的实质就是开采人矿，靠民工换取美元。改革开放就是拿人矿换美元。美元换来了技术产业，让韩国开始真正意义上进行大规模工业化和城市化。从经济上，力工是韩国当之无愧的重要资产。 韩国的现代化靠的是20.30岁的劳动力中位数，靠的是力工多子多福的前现代观念，这些现代人最瞧不上的观念恰恰是我们能够现代化的原因，能在全球化的时候赢得一个长工的位置。力工们几乎把自己的一切都燃烧了，为的大概就是儒家传统父权制理想中的那个男性模板，尽管这是没有任何制度保障的。当力工思维火起来之后，父权制就已...</div></div></div></a><a class="pagination-related" href="/2024/04/15/%E8%83%8C%E5%8C%85%E9%97%AE%E9%A2%98%E6%80%BB%E8%AE%BA/" title="背包问题总论"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">背包问题总论</div></div><div class="info-2"><div class="info-item-1">背包问题总论01背包1.01背包二维数组版123456789101112131415161718192021222301背包，一个选一次#include &lt;iostream&gt;#include &lt;cstring&gt;#include &lt;algorithm&gt;using namespace std;const int N = 110;int v[N],w[N];int dp[N][1010];int main()&#123;int n,m;cin&gt;&gt;m&gt;&gt;n;for (int i = 1; i &lt;= n; i ++ ) cin&gt;&gt;v[i]&gt;&gt;w[i];for (int i = 1; i &lt;= n; i ++ )for (int j = 0; j &lt;= m; j ++ )&#123;dp[i][j]=dp[i-1][j];//如果j《v【i】if(j&gt;=v[i]) dp[i][j]=max(dp[i-1][j],dp[i-1][j-v[i]]+w[i]);//不选，和选了，加这个条件是...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2024/02/10/js%E9%9D%A2%E8%AF%95%E5%8E%9F%E7%90%86%E7%AC%94%E8%AE%B0/" title="js面试原理笔记"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-02-10</div><div class="info-item-2">js面试原理笔记</div></div><div class="info-2"><div class="info-item-1">js面试原理笔记12345678function sum(a, b, c, d, e) &#123;  return a + b + c + d + e&#125;// 改写函数sum实现:参数传递到5个即可实现累加// sum(1)(2)(3)(4)(5)// sum(1)(2,3)(4)(5)// sum(1)(2,3,4)(5)// sum(1)(2,3)(4,5)  核心步骤: 1234567891011let nums = []function currySum(...args) &#123;  nums.push(...args)  if (nums.length &gt;= 5) &#123;    const result=nums.slice(0,length).reduce((prev, curv) =&gt; prev + curv, 0)    nums=[]//注意这里要清空,保证下次累加值正确    return result  &#125; else &#123;    return currySum  &#125;&#125;  更通用的方法：支持...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="https://pbs.twimg.com/profile_images/1904178056278999040/ZlNAiRHg_400x400.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">TorontoCat</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">10</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">5</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E7%9A%84js%E8%AF%AD%E6%B3%95"><span class="toc-number">1.</span> <span class="toc-text">抽象的js语法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-DOM-%E8%8A%82%E7%82%B9"><span class="toc-number">1.0.0.1.</span> <span class="toc-text">4.DOM 节点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B1%9E%E6%80%A7"><span class="toc-number">1.0.0.2.</span> <span class="toc-text">6.自定义属性</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E9%BC%A0%E6%A0%87%E4%BA%8B%E4%BB%B6"><span class="toc-number">1.0.1.</span> <span class="toc-text">一、鼠标事件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E9%94%AE%E7%9B%98%E4%BA%8B%E4%BB%B6"><span class="toc-number">1.0.2.</span> <span class="toc-text">二、键盘事件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%A1%A8%E5%8D%95%E4%BA%8B%E4%BB%B6"><span class="toc-number">1.0.3.</span> <span class="toc-text">三、表单事件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E7%AA%97%E5%8F%A3%E4%B8%8E%E9%A1%B5%E9%9D%A2%E4%BA%8B%E4%BB%B6"><span class="toc-number">1.0.4.</span> <span class="toc-text">四、窗口与页面事件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E8%A7%A6%E6%91%B8%E4%BA%8B%E4%BB%B6%EF%BC%88%E7%A7%BB%E5%8A%A8%E7%AB%AF%EF%BC%89"><span class="toc-number">1.0.5.</span> <span class="toc-text">五、触摸事件（移动端）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%85%B6%E4%BB%96%E4%BA%8B%E4%BB%B6"><span class="toc-number">1.0.6.</span> <span class="toc-text">六、其他事件</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/07/02/%E7%A8%B3%E5%AE%9A%E7%90%86%E8%B4%A2/" title="VAN强指数，不如单纳斯达克涨幅高">VAN强指数，不如单纳斯达克涨幅高</a><time datetime="2024-07-02T08:30:00.000Z" title="Created 2024-07-02 16:30:00">2024-07-02</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/06/12/%E8%AE%BA%E5%8A%9B%E5%B7%A5%E6%80%9D%E7%BB%B4/" title="论力工思维">论力工思维</a><time datetime="2024-06-12T12:15:00.000Z" title="Created 2024-06-12 20:15:00">2024-06-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/05/08/%E6%8A%BD%E8%B1%A1%E7%9A%84js%E8%AF%AD%E6%B3%95/" title="抽象的js语法">抽象的js语法</a><time datetime="2024-05-08T06:20:00.000Z" title="Created 2024-05-08 14:20:00">2024-05-08</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/04/15/%E8%83%8C%E5%8C%85%E9%97%AE%E9%A2%98%E6%80%BB%E8%AE%BA/" title="背包问题总论">背包问题总论</a><time datetime="2024-04-15T01:45:00.000Z" title="Created 2024-04-15 09:45:00">2024-04-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/03/20/%E5%88%98%E5%B0%8F%E6%9E%AB%E8%B0%88%E8%AF%BA%E6%96%AF%E5%BA%95%E4%B8%BB%E4%B9%89/" title="刘小枫谈诺斯底主义">刘小枫谈诺斯底主义</a><time datetime="2024-03-20T03:15:00.000Z" title="Created 2024-03-20 11:15:00">2024-03-20</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(https://w.wallhaven.cc/full/6l/wallhaven-6ld1xw.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 By TorontoCat</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><div class="js-pjax"></div><script src="/js/bg-route.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">Search</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  Loading Database</span></div><div class="local-search-input"><input placeholder="Search for Posts" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.1"></script></div></div></body></html>
