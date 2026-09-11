@@ -471,11 +471,22 @@ i.fas.fa-thumbtack.sticky {
   box-shadow: 0 14px 30px -10px rgba(76, 110, 245, 0.72);
 }
 
-/* 公告卡：淡色底 + 左侧渐变条 */
+/* 公告卡：淡色底 + 左侧渐变条（用伪元素做渐变条：
+   border-image 与 border-radius 同用时 Chrome 会丢掉渐变源，故不用它） */
 #aside-content .card-announcement {
+  position: relative;
   background-image: linear-gradient(120deg, rgba(76, 110, 245, 0.09), rgba(0, 196, 182, 0.07)) !important;
-  border-left: 3px solid transparent;
-  border-image: var(--bz-grad) 1;
+  overflow: hidden;
+}
+
+#aside-content .card-announcement::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--bz-grad);
 }
 
 #aside-content .card-announcement .announcement_content {
@@ -656,14 +667,14 @@ hr.custom-hr {
   background: linear-gradient(90deg, rgba(76, 110, 245, 0), var(--bz-line), rgba(0, 196, 182, 0));
 }
 
-/* 正文结尾的标签与分享 */
-.tag_share .post-meta__tag-list {
+/* 正文结尾的标签与分享（选择器带上 #post 前缀，否则被主题的 12px 圆角规则压掉） */
+#post .tag_share .post-meta__tag-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.tag_share .post-meta__tags {
+#post .tag_share .post-meta__tags {
   display: inline-block;
   padding: 3px 13px;
   border-radius: 999px;
@@ -673,7 +684,7 @@ hr.custom-hr {
   transition: all 0.3s var(--bz-ease);
 }
 
-.tag_share .post-meta__tags:hover {
+#post .tag_share .post-meta__tags:hover {
   background: var(--bz-grad);
   color: #fff;
   transform: translateY(-2px);
@@ -688,25 +699,36 @@ hr.custom-hr {
   transform: translateY(-3px) scale(1.1);
 }
 
-/* 版权卡片：左侧渐变条 */
-.post-copyright {
-  border-left: 3px solid transparent;
-  border-image: var(--bz-grad) 1;
+/* 版权卡片：左侧渐变条 + 淡底（同样用伪元素画渐变色条） */
+#post .post-copyright {
+  position: relative;
+  padding: 16px 20px 16px 22px !important;
+  border: none;
   border-radius: 12px;
   background: var(--bz-tint) !important;
-  padding: 16px 20px !important;
+  overflow: hidden;
 }
 
-.post-copyright .post-copyright-meta {
+#post .post-copyright::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--bz-grad);
+}
+
+#post .post-copyright .post-copyright-meta {
   color: var(--bz-indigo) !important;
   font-weight: 500;
 }
 
-.post-copyright .post-copyright-info {
+#post .post-copyright .post-copyright-info {
   color: #64748b;
 }
 
-[data-theme='dark'] .post-copyright .post-copyright-info {
+[data-theme='dark'] #post .post-copyright .post-copyright-info {
   color: #b8c1d1;
 }
 
@@ -776,7 +798,9 @@ hr.custom-hr {
   scrollbar-width: thin;
 }
 
-#card-toc .toc-content .toc-link {
+/* 选择器带上 #aside-content：主题里有一条 #aside-content #card-toc .toc-content .toc-link
+   的 6px 圆角规则，不加前缀会被它压掉 */
+#aside-content #card-toc .toc-content .toc-link {
   position: relative;
   display: block;
   padding: 3px 8px;
@@ -784,18 +808,18 @@ hr.custom-hr {
   transition: all 0.26s var(--bz-ease);
 }
 
-#card-toc .toc-content .toc-link:hover {
+#aside-content #card-toc .toc-content .toc-link:hover {
   background: var(--bz-tint);
   color: var(--bz-indigo) !important;
 }
 
-#card-toc .toc-content .toc-link.active {
+#aside-content #card-toc .toc-content .toc-link.active {
   background: linear-gradient(90deg, rgba(76, 110, 245, 0.16), rgba(0, 196, 182, 0.1));
   color: var(--bz-indigo-deep) !important;
   font-weight: 600;
 }
 
-#card-toc .toc-content .toc-link.active::before {
+#aside-content #card-toc .toc-content .toc-link.active::before {
   content: '';
   position: absolute;
   top: 20%;
@@ -1026,7 +1050,292 @@ hr.custom-hr {
   #aside-content .aside-list-item:hover,
   .pagination-post .pagination-related:hover,
   #rightside > div > button:hover,
-  #rightside > div > a:hover {
+  #rightside > div > a:hover,
+  .tag-cloud-list a:hover,
+  .category-list-item:hover,
+  .article-sort-item:hover,
+  .flink-list-item:hover,
+  #site_social_icons .social-icon:hover,
+  #card-info-btn:hover {
     transform: none !important;
+  }
+}
+
+/* ============ 14 内页：标签 / 分类 / 归档 / 友链 ============ */
+/* 这几页的主题标记是另一套（tag-cloud-list / category-list / article-sort-item / flink），
+   与首页卡片互不相干，所以样式单独写一份。 */
+
+/* ---- 标签页：清掉主题写死的随机内联底色，统一成渐变胶囊 ---- */
+.tag-cloud-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.tag-cloud-list a {
+  display: inline-block;
+  margin: 0;
+  padding: 6px 16px;
+  border: 1px solid var(--bz-line);
+  border-radius: 999px;
+  background: var(--bz-tint) !important;
+  color: var(--bz-indigo-deep) !important;
+  font-size: 0.92rem !important;
+  line-height: 1.8;
+  transition: all 0.3s var(--bz-ease);
+}
+
+.tag-cloud-list a:hover {
+  border-color: transparent;
+  background: var(--bz-grad) !important;
+  color: #fff !important;
+  transform: translateY(-3px);
+  box-shadow: var(--bz-glow);
+}
+
+/* ---- 分类页 ---- */
+.category-lists .category-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.category-lists .category-list-item {
+  margin: 8px 0;
+  padding: 10px 16px;
+  border: 1px solid var(--bz-line);
+  border-radius: 12px;
+  background: var(--glass-bg);
+  list-style: none;
+  transition: all 0.3s var(--bz-ease);
+}
+
+.category-lists .category-list-item:hover {
+  border-color: transparent;
+  background: var(--bz-tint);
+  transform: translateX(4px);
+}
+
+.category-lists .category-list-link {
+  color: var(--font-color);
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.category-lists .category-list-count {
+  display: inline-block;
+  min-width: 26px;
+  margin-left: 10px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: var(--bz-tint);
+  color: var(--bz-indigo-deep);
+  font-size: 0.74rem;
+  text-align: center;
+  vertical-align: 1px;
+}
+
+.category-lists .category-list-item:hover .category-list-count {
+  background: var(--bz-grad);
+  color: #fff;
+}
+
+/* 父分类下挂的子分类缩进 + 竖线 */
+.category-lists .category-list .category-list {
+  margin-top: 8px;
+  padding-left: 14px;
+  border-left: 2px solid var(--bz-line);
+}
+
+/* ---- 归档页（按文章列表呈现，不是时间轴） ---- */
+.article-sort {
+  margin: 0;
+  padding: 0;
+  border-left: none !important;
+}
+
+.article-sort-title {
+  margin: 26px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: none;
+  background-image: var(--bz-grad);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 54px 3px;
+  color: var(--font-color);
+  font-size: 1.12rem;
+  font-weight: 600;
+}
+
+.article-sort-item {
+  display: flex;
+  align-items: center;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--bz-line);
+  border-radius: 12px;
+  background: var(--glass-bg);
+  transition: all 0.32s var(--bz-ease);
+}
+
+.article-sort-item:hover {
+  border-color: transparent;
+  box-shadow: 0 12px 28px -16px rgba(31, 45, 61, 0.5);
+  transform: translateX(4px);
+}
+
+.article-sort-item-img {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px -8px rgba(31, 45, 61, 0.5);
+}
+
+.article-sort-item-img img {
+  border-radius: 10px;
+  transition: transform 0.6s var(--bz-ease);
+}
+
+.article-sort-item:hover .article-sort-item-img img {
+  transform: scale(1.06);
+}
+
+.article-sort-item-title {
+  color: var(--font-color) !important;
+  font-weight: 500;
+  transition: color 0.26s var(--bz-ease);
+}
+
+.article-sort-item:hover .article-sort-item-title {
+  color: var(--bz-indigo) !important;
+}
+
+.article-sort-item-time {
+  color: var(--bz-muted) !important;
+  font-size: 0.78rem;
+}
+
+.article-sort-item-time i {
+  color: var(--bz-indigo);
+  opacity: 0.7;
+}
+
+.article-sort-item-year {
+  color: var(--bz-indigo) !important;
+  font-weight: 600;
+}
+
+/* ---- 友链页 ----
+   主题的标记是 .container .flink .flink-list > .flink-list-item（权重 0,4,0），
+   普通类选择器压不住它，所以这里统一带 #article-container 前缀（ID 权重最高）。 */
+#article-container .flink .flink-desc {
+  margin: 6px 0 16px;
+  color: var(--bz-muted);
+  font-size: 0.88rem;
+}
+
+#article-container .flink .flink-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 10px 0 0;
+  overflow: visible;
+}
+
+#article-container .flink .flink-list > .flink-list-item {
+  position: relative;
+  float: none;
+  overflow: hidden;
+  margin: 0;
+  width: auto;
+  height: 90px;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  transition: all 0.34s var(--bz-ease);
+}
+
+/* 关掉主题那个会铺满整卡的实心色块，改用卡片自身的抬升 + 描边做反馈 */
+#article-container .flink .flink-list > .flink-list-item::before {
+  display: none;
+}
+
+#article-container .flink .flink-list > .flink-list-item:hover {
+  border-color: var(--bz-line);
+  box-shadow: var(--glass-shadow-hover);
+  transform: translateY(-4px);
+}
+
+#article-container .flink .flink-list > .flink-list-item a {
+  display: block;
+  height: 100%;
+}
+
+#article-container .flink .flink-list > .flink-list-item a .flink-item-icon {
+  float: left;
+  width: 46px;
+  height: 46px;
+  margin: 21px 12px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: linear-gradient(#fff, #fff) padding-box, var(--bz-grad) border-box;
+  box-shadow: 0 6px 16px -10px rgba(76, 110, 245, 0.75);
+  transition: transform 0.4s var(--bz-ease);
+}
+
+[data-theme='dark'] #article-container .flink .flink-list > .flink-list-item a .flink-item-icon {
+  background: linear-gradient(#1b1f2a, #1b1f2a) padding-box, var(--bz-grad) border-box;
+}
+
+/* 主题 hover 会把图标宽度压成 0，这里锁住尺寸，改成轻微放大 */
+#article-container .flink .flink-list > .flink-list-item:hover .flink-item-icon {
+  width: 46px;
+  margin-left: 12px;
+  margin-right: 12px;
+  transform: scale(1.08) rotate(-3deg);
+}
+
+#article-container .flink .flink-list > .flink-list-item a .flink-item-icon img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+#article-container .flink .flink-item-name {
+  padding: 26px 8px 0 0;
+  height: auto;
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: left;
+}
+
+#article-container .flink .flink-item-desc {
+  padding: 5px 8px 0 0;
+  height: auto;
+  color: var(--bz-muted);
+  font-size: 0.78rem;
+  text-align: left;
+}
+
+@media screen and (max-width: 768px) {
+  #article-container .flink .flink-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .tag-cloud-list a {
+    padding: 5px 13px;
+    font-size: 0.86rem !important;
+  }
+
+  .article-sort-item {
+    padding: 8px 10px;
   }
 }
