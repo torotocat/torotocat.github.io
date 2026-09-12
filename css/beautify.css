@@ -392,16 +392,19 @@ html {
   padding: var(--s-5) var(--s-6) var(--s-6);
 }
 
+/* 权重对齐主题的 #recent-posts .recent-post-item > .recent-post-info > .article-title，
+   否则字号（1.55em≈24.8px）会压过本层。24px = 16/20/24/30 刻度上的一档。 */
+#recent-posts .recent-post-item > .recent-post-info > .article-title,
 #recent-posts .recent-post-info .article-title {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
   color: var(--c-text);
-  font-size: 1.25rem;
+  font-size: 1.5rem;   /* 24px：16/20/24/30 刻度上的一档，也贴近主题原本的 1.55em */
   font-weight: 600;
-  line-height: 1.45;
-  letter-spacing: -0.005em;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
   transition: color var(--dur) var(--ease);
 }
 
@@ -410,6 +413,7 @@ html {
 }
 
 /* meta 行：flex + 13px 弱化色，去掉那串竖线 */
+#recent-posts .recent-post-item > .recent-post-info > .article-meta-wrap,
 #recent-posts .recent-post-info .article-meta-wrap {
   display: flex;
   flex-wrap: wrap;
@@ -417,7 +421,7 @@ html {
   gap: var(--s-1) var(--s-2);
   margin: var(--s-3) 0 var(--s-3);
   color: var(--c-text-3);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;   /* 14px，刻度上的一档（主题在这里写的是 0.9em=14.4px） */
   line-height: 1.6;
 }
 
@@ -949,10 +953,15 @@ hr.custom-hr {
   background: var(--c-accent);
 }
 
+/* 主题规则是 #aside-content #card-toc .toc-percentage（2 个 id）：
+   原值 #a9a9a9 + font-size:140%，对比度 2.35:1 不达 AA，字号还大于正文。
+   这里带满前缀覆盖，同时把字号收回刻度上的 12px。 */
+#aside-content #card-toc .toc-percentage,
 #card-toc .item-headline .toc-percentage {
   color: var(--c-text-3);
   font-size: 0.75rem;
   font-weight: 500;
+  opacity: 1;
 }
 
 /* ==================== 09 正文元素 ==================== */
@@ -981,6 +990,7 @@ hr.custom-hr {
 #article-container p {
   margin: 0 0 1.15em;
 }
+
 
 /* 标题层级：字号严格取自刻度，字重不超过 600 */
 #article-container h1 {
@@ -1153,6 +1163,34 @@ hr.custom-hr {
 #article-container ul li,
 #article-container ol li {
   margin: 0.3em 0;
+}
+
+/* ---------- 阅读栏宽（measure）----------
+   中文长文的舒适区是每行 30–45 字。原来正文容器 784px / 16px = 每行 49 个汉字，偏宽，
+   眼睛换行时容易跳行。
+   只收窄「阅读面」（正文 / 标题 / 列表 / 引用 / 配图）到 40rem = 640px（≈40 字/行），
+   并居中；表格（.table-wrap）、代码块（figure.highlight）、图集（.gal-grid）
+   是「数据面」，保持原宽不动——它们宽一点更好用。
+   用 rem 而不是 em：标题字号比正文大会让 em 换算出的上限超过容器，反而收不住。 */
+#article-container > p,
+#article-container > h1,
+#article-container > h2,
+#article-container > h3,
+#article-container > h4,
+#article-container > h5,
+#article-container > h6,
+#article-container > ul,
+#article-container > ol,
+#article-container > blockquote,
+#article-container > figure:not(.highlight) {
+  max-width: 40rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 正文第一个元素不留上边距：卡片本身已有 40px 内边距，再叠一个标题上边距会空出一大片 */
+#article-container > :first-child {
+  margin-top: 0;
 }
 
 /* ==================== 10 页脚 ==================== */
