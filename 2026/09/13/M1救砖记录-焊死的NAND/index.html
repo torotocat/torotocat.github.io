@@ -1,0 +1,450 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>一块焊死的 NAND：M1 MacBook 救砖全过程，最后修的是硬件 | TorontoCat's Blog</title><meta name="author" content="TorontoCat"><meta name="copyright" content="TorontoCat"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="一台内置 NAND 坏掉的 M1 MacBook 救砖记录：从&quot;装到外置盘就行&quot;开始，一路走到 DFU 的 revive 能过 &#x2F; restore 必挂、恢复模式日志判定内置盘不成立、asr 跨机克隆与 UEFI-only 两条仅剩的软件路线，最后确认所有软件路线都被焊死的存储封死，只剩送修——换 NAND、仍重启、CPU 重植">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一块焊死的 NAND：M1 MacBook 救砖全过程，最后修的是硬件">
+<meta property="og:url" content="https://torotocat.github.io/2026/09/13/M1%E6%95%91%E7%A0%96%E8%AE%B0%E5%BD%95-%E7%84%8A%E6%AD%BB%E7%9A%84NAND/index.html">
+<meta property="og:site_name" content="TorontoCat&#39;s Blog">
+<meta property="og:description" content="一台内置 NAND 坏掉的 M1 MacBook 救砖记录：从&quot;装到外置盘就行&quot;开始，一路走到 DFU 的 revive 能过 &#x2F; restore 必挂、恢复模式日志判定内置盘不成立、asr 跨机克隆与 UEFI-only 两条仅剩的软件路线，最后确认所有软件路线都被焊死的存储封死，只剩送修——换 NAND、仍重启、CPU 重植">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://torotocat.github.io/images/covers/anime-girl-balletcore-20260913.jpg">
+<meta property="article:published_time" content="2026-09-13T02:20:00.000Z">
+<meta property="article:modified_time" content="2026-09-13T02:20:00.000Z">
+<meta property="article:author" content="TorontoCat">
+<meta property="article:tag" content="Mac">
+<meta property="article:tag" content="硬件">
+<meta property="article:tag" content="数据恢复">
+<meta property="article:tag" content="维修">
+<meta property="article:tag" content="踩坑">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://torotocat.github.io/images/covers/anime-girl-balletcore-20260913.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "一块焊死的 NAND：M1 MacBook 救砖全过程，最后修的是硬件",
+  "url": "https://torotocat.github.io/2026/09/13/M1%E6%95%91%E7%A0%96%E8%AE%B0%E5%BD%95-%E7%84%8A%E6%AD%BB%E7%9A%84NAND/",
+  "image": "https://torotocat.github.io/images/covers/anime-girl-balletcore-20260913.jpg",
+  "datePublished": "2026-09-13T02:20:00.000Z",
+  "dateModified": "2026-09-13T02:20:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "TorontoCat",
+      "url": "https://torotocat.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.ico"><link rel="canonical" href="https://torotocat.github.io/2026/09/13/M1%E6%95%91%E7%A0%96%E8%AE%B0%E5%BD%95-%E7%84%8A%E6%AD%BB%E7%9A%84NAND/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css?v=5.5.1"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0f1011')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const hour = new Date().getHours()
+          const isNight = hour <= 6 || hour >= 18
+          if (theme === undefined) isNight ? activateDarkMode() : activateLightMode()
+          else theme === 'light' ? activateLightMode() : activateDarkMode()
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.json","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":150,"languages":{"author":"作者: TorontoCat","link":"链接: ","source":"来源: TorontoCat's Blog","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '一块焊死的 NAND：M1 MacBook 救砖全过程，最后修的是硬件',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/lxgw-wenkai-lite-webfont@1.7.0/lxgwwenkailite-regular.css' media='print' onload='this.media="all"'><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/lxgw-wenkai-lite-webfont@1.7.0/lxgwwenkailite-bold.css' media='print' onload='this.media="all"'><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="/css/beautify.css"><script src="/js/cover-list.js"></script><script src="/js/cover-early.js"></script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      if ($loadingBox.classList.contains('loaded')) return
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+
+  if (document.readyState === 'complete') {
+    preloader.endLoading()
+  } else {
+    window.addEventListener('load', preloader.endLoading)
+    document.addEventListener('DOMContentLoaded', preloader.endLoading)
+    // Add timeout protection: force end after 7 seconds
+    setTimeout(preloader.endLoading, 7000)
+  }
+
+  if (false) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div id="web_bg" style="background-image: url(/img/bg-cool-light.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="https://pbs.twimg.com/profile_images/1904178056278999040/ZlNAiRHg_400x400.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">25</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">33</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-graduation-cap"></i><span> 博文</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/gallery/"><i class="fa-fw fas fa-images"></i><span> 图集</span></a></div><div class="menus_item"><a class="site-page" href="/links/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/images/covers/anime-girl-balletcore-20260913.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">TorontoCat's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">一块焊死的 NAND：M1 MacBook 救砖全过程，最后修的是硬件</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-graduation-cap"></i><span> 博文</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/gallery/"><i class="fa-fw fas fa-images"></i><span> 图集</span></a></div><div class="menus_item"><a class="site-page" href="/links/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">一块焊死的 NAND：M1 MacBook 救砖全过程，最后修的是硬件</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-09-13T02:20:00.000Z" title="发表于 2026-09-13 10:20:00">2026-09-13</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-09-13T02:20:00.000Z" title="更新于 2026-09-13 10:20:00">2026-09-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%94%9F%E6%B4%BB/">生活</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-commentcount"><i class="far fa-comments fa-fw post-meta-icon"></i><span class="post-meta-label">评论数:</span><a href="/2026/09/13/M1%E6%95%91%E7%A0%96%E8%AE%B0%E5%BD%95-%E7%84%8A%E6%AD%BB%E7%9A%84NAND/#post-comment" itemprop="discussionUrl"><span class="valine-comment-count" data-xid="/2026/09/13/M1%E6%95%91%E7%A0%96%E8%AE%B0%E5%BD%95-%E7%84%8A%E6%AD%BB%E7%9A%84NAND/" itemprop="commentCount"><i class="fa-solid fa-spinner fa-spin"></i></span></a></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>这台 MacBook 的结局，是在维修店里的。但走到那个结局之前，我们把能试的软件路线全试了一遍——而<strong>每一条路，最后都撞在同一块焊死的 NAND 上</strong>。</p>
+<p>这篇文章按时间顺序记：先讲症状，再讲每一步为什么失败，最后讲为什么”修硬件”不是放弃，而是唯一的出口。</p>
+<hr>
+<h2 id="一、症状与第一个要打破的错觉"><a href="#一、症状与第一个要打破的错觉" class="headerlink" title="一、症状与第一个要打破的错觉"></a>一、症状与第一个要打破的错觉</h2><p>最初的描述是这样的：<strong>macOS 磁盘坏了，买了一块外置硬盘，想把系统装上去</strong>。</p>
+<p>这里第一个要分清的是三种完全不同的”坏”：</p>
+<table>
+<thead>
+<tr>
+<th>症状</th>
+<th>性质</th>
+<th>后果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>开机问号文件夹</td>
+<td>只是找不到启动系统</td>
+<td>盘大概率还能读，<strong>先抢救数据</strong></td>
+</tr>
+<tr>
+<td>能进恢复模式、磁盘工具里能看到内置盘</td>
+<td>引导&#x2F;系统卷坏了</td>
+<td>可以试重装</td>
+</tr>
+<tr>
+<td>咔咔响 &#x2F; 磁盘工具里根本看不到</td>
+<td>物理坏</td>
+<td>数据只能找专业机构</td>
+</tr>
+</tbody></table>
+<p>还有一条定心丸要先吃：<strong>磁盘坏了 ≠ 电脑坏了</strong>。M1 的主板、芯片、固件是独立的，内置盘坏只影响存储。当时的判断依据是”DFU 还能刷进去”，说明芯片是活的。</p>
+<p>而”装到外置盘”这件事在 M1 上<strong>理论上真的可行</strong>，原因是一条很多人不知道的硬件事实：</p>
+<blockquote>
+<p><strong>Apple Silicon 的启动界面（长按电源键出来的那个启动选项）写在芯片固件里，不依赖内置硬盘。</strong></p>
+</blockquote>
+<p>所以内置盘坏了，机器仍然能进启动选项、仍然有能力从外部介质引导——这是后来所有尝试的前提。</p>
+<h2 id="二、第一次尝试：恢复模式直接装到外置盘"><a href="#二、第一次尝试：恢复模式直接装到外置盘" class="headerlink" title="二、第一次尝试：恢复模式直接装到外置盘"></a>二、第一次尝试：恢复模式直接装到外置盘</h2><p>不需要第二台 Mac，理论上四步：</p>
+<ol>
+<li>接上外置<strong>SSD</strong>（USB-C&#x2F;雷电口；机械盘装系统会卡到怀疑人生）</li>
+<li>开机长按电源键 → 点齿轮「选项」进恢复模式。内置盘的本地恢复分区读不出来，它会自动<strong>联网恢复</strong>，需要先连 Wi-Fi，等它下载恢复镜像</li>
+<li>磁盘工具里抹掉外置盘：<strong>APFS + GUID 分区图</strong></li>
+<li>「安装 macOS」→ 点「显示所有磁盘」→ 选外置盘 → 装（下载完整系统 10GB+，网速快也要半小时以上）</li>
+</ol>
+<p>常见的坑也都在这儿：启动选项里看不到外置盘（换线&#x2F;换口，或去「启动安全性实用工具」允许从外部介质启动）、安装时找不到外置盘（没抹成 APFS+GUID）、装完卡住（长按电源键手动选启动盘）。</p>
+<p><strong>结果是：走到最后阶段失败。</strong></p>
+<h2 id="三、撞墙的位置暴露了病根"><a href="#三、撞墙的位置暴露了病根" class="headerlink" title="三、撞墙的位置暴露了病根"></a>三、撞墙的位置暴露了病根</h2><p>这个失败点很关键。外置盘安装 macOS 并不是”只往外部硬盘写”——<strong>安装器在最后阶段仍然要往内置盘写恢复分区和固件</strong>。也就是说：</p>
+<blockquote>
+<p>只要写内置盘的动作为真，内置 NAND 一坏，安装就必然挂。</p>
+</blockquote>
+<p>这一步之后，”磁盘坏了但机器好好的，装外置盘就复活”这个乐观假设，已经站不住了。</p>
+<h2 id="四、分水岭：revive-能过，restore-必挂"><a href="#四、分水岭：revive-能过，restore-必挂" class="headerlink" title="四、分水岭：revive 能过，restore 必挂"></a>四、分水岭：revive 能过，restore 必挂</h2><p>下一步是 DFU 刷机（Apple Configurator &#x2F; Apple Devices，需要另一台 Mac 用 USB-C 线连）。DFU 里有两个不同的动作，它们的结果<strong>不一样</strong>，而这个差异就是全场最重要的诊断信号：</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th>做什么</th>
+<th>写入量</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>revive</strong></td>
+<td>只重刷系统卷固件，保留数据</td>
+<td>小</td>
+<td>✅ <strong>能过</strong></td>
+</tr>
+<tr>
+<td><strong>restore</strong></td>
+<td>全盘擦除 + 完整重写（系统卷 + 数据卷 + 恢复卷）</td>
+<td>大</td>
+<td>❌ <strong>报错</strong></td>
+</tr>
+</tbody></table>
+<p>机制上说得通：<strong>内置 NAND 有坏块或寿命磨损时，小量写入还能绕过去，全盘完整重写就必然撞上坏块</strong>，于是中断报错。同时 revive 能过也反过来说明：链路、芯片、线材都没问题——<strong>线材不背锅</strong>。</p>
+<p>当时的错误码是 <strong>1113</strong>。查证结果：报错全文是 <code>AMRestoreErrorDomain error 1113 - Failed to handle message type StatusMsg</code>，即恢复流程中设备无法继续处理主机的状态消息、通信中断。扒到的社区同款案例（4 条，全是 M1）：</p>
+<table>
+<thead>
+<tr>
+<th>案例</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MacBook Air M1 走 DFU 报 1113</td>
+<td>评论：AC 刷不了，只能送 Apple Store</td>
+</tr>
+<tr>
+<td>MacBook Pro M1 升级失败转 DFU 报 1113</td>
+<td>典型是线材&#x2F;固件写入失败，排除线口后指向逻辑板&#x2F;存储</td>
+</tr>
+<tr>
+<td>M1 Mac mini 升级全失败报 1113</td>
+<td>楼主最终定位为 M1 自身固件问题，Intel 主机修不了</td>
+</tr>
+<tr>
+<td>同类 error 6（同一个 StatusMsg 家族）</td>
+<td>revive 失败 → restore 也失败，结论送检</td>
+</tr>
+</tbody></table>
+<p><strong>1113 和 error 6 是同一个错误家族，社区里这类错误走到最后，无一例外指向硬件层面或送修。</strong></p>
+<p>到这里证据链就闭合了：</p>
+<ol>
+<li>revive 能过 → 链路、芯片 OK</li>
+<li>restore 报 1113 → 刷固件写不进内置存储</li>
+<li>外置盘安装最后阶段失败 → 要写内置恢复分区&#x2F;固件</li>
+<li>系统层面已判定内置盘”不是 macOS”</li>
+</ol>
+<h2 id="五、读日志：系统其实早就告诉你了"><a href="#五、读日志：系统其实早就告诉你了" class="headerlink" title="五、读日志：系统其实早就告诉你了"></a>五、读日志：系统其实早就告诉你了</h2><p>恢复模式的安装日志里能翻到这两行（它们才是最有信息量的）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">disk3s1,Macintosh HD: not macOS because bootcaches.plist does not exist.</span><br><span class="line">disk7s2,ExternalMac: not macOS because bootcaches.plist does not exist.</span><br></pre></td></tr></table></figure>
+
+<p><code>disk3s1 Macintosh HD</code> 是内置盘的系统卷——启动器在上面找不到 <code>bootcaches.plist</code>，于是判定它”不是 macOS”，也就是<strong>系统已经不完整&#x2F;读不出来</strong>。同一份日志里其余的行大多是恢复模式的正常噪音（<code>dmg booted but not physical media</code>、<code>System doesn&#39;t have bridgeOS</code>、<code>KeyRecoveryAssistant</code> 认证成功但内部没有 FileVault 卷所以直接退出）。</p>
+<p>顺带一个好消息式的信息：<code>KeyRecoveryAssistant: Has Authenticated: YES</code>——设备激活状态正常，没有激活锁问题。</p>
+<h2 id="六、时间窗：能进恢复模式-最后一个读盘窗口"><a href="#六、时间窗：能进恢复模式-最后一个读盘窗口" class="headerlink" title="六、时间窗：能进恢复模式 &#x3D; 最后一个读盘窗口"></a>六、时间窗：能进恢复模式 &#x3D; 最后一个读盘窗口</h2><p>这是整件事里唯一有时间压力的一步。能进恢复模式说明磁盘还能被系统看到，<strong>这是最后一个读数据的窗口</strong>：</p>
+<ul>
+<li>磁盘工具里看 <code>Macintosh HD</code> 能不能挂载、能不能看到文件</li>
+<li><strong>能读</strong> → 终端里把用户目录整份拷到外置盘</li>
+<li><strong>挂载就报 I&#x2F;O 错误 &#x2F; 拷到一半卡死</strong> → 停手，别再试。反复读坏 NAND 只会更坏</li>
+</ul>
+<h2 id="七、仅剩的两条软件路线，都写在这里"><a href="#七、仅剩的两条软件路线，都写在这里" class="headerlink" title="七、仅剩的两条软件路线，都写在这里"></a>七、仅剩的两条软件路线，都写在这里</h2><p>软件层面其实还有两条路，最后一条是”不碰坏盘”的：</p>
+<p><strong>① asr 跨机克隆（唯一不写坏盘的招）</strong></p>
+<p><code>asr</code>（Apple Software Restore）是苹果自带的整盘克隆工具，把一台 Mac 的整个系统原样复制到另一块盘。它的价值在于：<strong>全程在另一台好 Mac 上操作，坏盘根本不参与</strong>，所以不会中途失败。</p>
+<p>但有一关过不去：<strong>Apple Silicon 的 macOS 系统卷是跟具体哪台机器绑定的</strong>（personalized）。装系统时系统卷签名会跟这台机器的芯片、启动安全策略绑定，你在 A 台克隆出来的系统是”签给 A 台”的；插到坏的那台上，安全启动链校验签名对不上，大概率直接拒载。有小概率成功（同型号、系统版本老），但本质是赌。失败成本≈0，所以有条件值得一试。</p>
+<p><strong>② UEFI-only + 系统全放外置盘（Asahi 那条路）</strong></p>
+<p>思路是内置盘只写一个引导器、系统完全放外置盘。这条有真实先例（Asahi 官方仓库 issue #96，有人做过完全一样的方案）：</p>
+<ul>
+<li>第一坑：U-Boot 不会自动从外置盘引导，直接掉进 <code>grub rescue</code></li>
+<li>解法一：外置盘的 FAT32 分区里放 <code>/efi/boot/bootaa64.efi</code>——这是 UEFI 规范里可移动介质的回退路径，放别处不认</li>
+<li>解法二：修 GRUB 配置里的分区 UUID——外置盘每次格式化 UUID 都会变，配置对不上就找不到系统</li>
+</ul>
+<p>而官方态度很直白（Asahi 创始人 marcan 原话）：<strong>external install 只是给开发者实验用的，不支持终端用户，专家模式本来就是会坏的。</strong></p>
+<p>**这条路的前置条件同样是”内置盘还能被写”**——而这恰恰是这台机器已经不成立的。所以最后它连试的机会都没有。</p>
+<h2 id="八、结论：为什么”救砖”在这台机器上不成立"><a href="#八、结论：为什么”救砖”在这台机器上不成立" class="headerlink" title="八、结论：为什么”救砖”在这台机器上不成立"></a>八、结论：为什么”救砖”在这台机器上不成立</h2><p>把上面的东西合起来，是一句不太好听的话：</p>
+<blockquote>
+<p><strong>M1 的 SSD 是焊死在主板上的，而且启动链、恢复分区、固件更新这几件事全都要碰内置盘。内置盘一坏，”软件救砖”这个选项就不存在了。</strong></p>
+</blockquote>
+<p>外置盘能做的只是<strong>应急</strong>：就算某天真从外置盘跑起来了，系统大版本更新、固件更新仍然会失败（这些操作会碰内置恢复分区），而且不排除哪天固件更新把系统直接搞挂。</p>
+<p>所以决策变成纯经济账：</p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>价格</th>
+<th>判断</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>官方换主板</td>
+<td>3000+</td>
+<td>对 2020 款的机器，不值</td>
+</tr>
+<tr>
+<td>第三方换 NAND &#x2F; 搬板</td>
+<td>1500～2500</td>
+<td>和二手残值（2000～4000）比</td>
+</tr>
+<tr>
+<td>当尸体卖</td>
+<td>800～1500</td>
+<td>止损线</td>
+</tr>
+<tr>
+<td>专业数据恢复（NAND 级搬板）</td>
+<td>2000～5000+</td>
+<td>只在这台机器里有”值这个价”的数据时</td>
+</tr>
+</tbody></table>
+<p><strong>判据一句话：修价 ≥ 二手价，就直接买二手，别修。</strong></p>
+<hr>
+<h2 id="九、送修实录：最后修的是硬件"><a href="#九、送修实录：最后修的是硬件" class="headerlink" title="九、送修实录：最后修的是硬件"></a>九、送修实录：最后修的是硬件</h2><p>送修之后的经过，比前面所有技术分析都更有教益。</p>
+<p><strong>第一轮：换硬盘（NAND），800。</strong></p>
+<p>师傅换完 NAND，<strong>测试了一天没问题</strong>，交机。结果第二天又开始重启。</p>
+<p><strong>第一轮判断为什么错？</strong> 有两个可能：硬盘不是真正的病根，或者换上去的料本身有问题。但更值得注意的是<strong>症状形态</strong>——“测一天才犯病”恰恰是硬件虚焊最典型的特征：</p>
+<blockquote>
+<p>开机后温度慢慢升高，焊点热胀冷缩一分离就断电重启，凉下来又正常。</p>
+</blockquote>
+<p>这也顺手排除了另一个自我怀疑：”是不是我把别的用户 ID 刷进去了？”——<strong>不是</strong>。软件&#x2F;固件层面的问题（Apple ID、个性化数据）表现是进不去系统、白苹果、激活锁弹窗，**它不会”正常跑一天然后重启”**。</p>
+<p>更硬的一条证据是<strong>内核崩溃日志（panic）</strong>：系统报告里能翻到一条 15:17 的 panic。这说明重启不是玄学、不是电池、不是温度，而是<strong>硬件层把系统直接干崩了</strong>。而且 panic 报告会写明是哪块硬件干崩的——<code>nvme</code> &#x2F; <code>ANS2</code> &#x2F; <code>sks</code> 字样指向存储，SoC&#x2F;板层相关字样指向 CPU 或主板。<strong>看这一个文件，比听任何人的推测都强。</strong></p>
+<p>当时的报告里还能读到几条有用信息：机器<strong>能进系统</strong>（说明换的 NAND 能引导、能跑，不是彻底废）、序列号 F 开头（2020 年产）、跑 15.6.1。</p>
+<p><strong>第二轮：CPU &#x2F; 板层，还是 800。</strong></p>
+<p>师傅的判断是”应该是 CPU 或者板层断线”，并明确了一句：”<strong>如果是 CPU 本身的问题导致的故障，动了有不开机的风险</strong>“，以及”如果万一黑屏完全没反应，这个我们不负责”。</p>
+<p>这句话要听明白：<strong>这台机器现在不是砖，是半砖</strong>——能开机、能进 DFU、只是重启。赌输了才是全砖，连 DFU 都进不去，这 800 块也白花。所以”反正也是砖了，修好血赚”这个心态可以，但必须知道代价是<strong>可能变得更死</strong>，而不是维持原样。</p>
+<p>价格本身不算黑：BGA 重植 CPU 或板层飞线，行情普遍 400～1500，800 属于正常区间。而且两轮都是 800，没有坐地起价。</p>
+<p><strong>修之前值得问清楚的三件事</strong>（这次也这么做了）：</p>
+<ol>
+<li>是<strong>重植（reball）</strong>还是只<strong>加焊（reflow）</strong>？重植更稳，加焊容易返修</li>
+<li>修完<strong>保多久</strong>？一般至少保 3 个月</li>
+<li>让他修完<strong>连续测试 3 天</strong>再交机——虚焊的机器跑一天才犯病，测一天不够</li>
+</ol>
+<p>另外可以让他顺带查一下 <strong>T2 芯片</strong>（部分 2020 款机型），T2 虚焊和 CPU 症状经常一模一样，别只盯着 CPU。</p>
+<p>最坏情况的兜底也算了：真黑屏了就拆件卖，屏幕是大头（Air M1 屏幕约 800～1200，整机拆件大概能回 1500～2500）。<strong>修的价值仍然大于拆</strong>——但要是修坏了，记得让师傅把尸体留着，拆件还能回点血。</p>
+<hr>
+<h2 id="十、复盘：五条能直接复用的经验"><a href="#十、复盘：五条能直接复用的经验" class="headerlink" title="十、复盘：五条能直接复用的经验"></a>十、复盘：五条能直接复用的经验</h2><ol>
+<li><strong><code>revive</code> 能过、<code>restore</code> 必挂 &#x3D; 存储坏了。</strong> 这是最快的判别法，比换线、换口、重装快得多，而且不冤枉线材。</li>
+<li><strong>在 M1 上，”装到外置盘”不是万能逃生门。</strong> 它的前提是内置盘<strong>还能被写</strong>（恢复分区&#x2F;固件那一步）。内置盘一坏，外置盘方案连起跑线都上不去。</li>
+<li><strong>能进恢复模式的那段时间，是唯一的数据窗口。</strong> 挂载报 I&#x2F;O 错就立刻停手，别为了多拷几个文件把盘读死。</li>
+<li><strong>panic 日志是病根的直接证据。</strong> 崩溃能留下日志说明系统活着活崩的，报告里写明了是哪块硬件；拿它去跟维修师傅对话，比”我感觉是硬盘”有效得多。</li>
+<li><strong>报价永远和残值一起算。</strong> 官方 3000+ vs 二手 2000～4000，账一算就知道该修还是该换；任何一方单独看都会算错。</li>
+</ol>
+<hr>
+<p><em>这台机器的后续：截至写这篇的时候，它还躺在师傅那儿等 CPU 重植的结果。修好了我再来补一段。</em></p>
+<p><em>封面图：《𝑩𝒂𝒍𝒍𝒆𝒕𝒄𝒐𝒓𝒆》——原创，作者 桃稚ちあ（Pixiv）。</em></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://torotocat.github.io">TorontoCat</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://torotocat.github.io/2026/09/13/M1%E6%95%91%E7%A0%96%E8%AE%B0%E5%BD%95-%E7%84%8A%E6%AD%BB%E7%9A%84NAND/">https://torotocat.github.io/2026/09/13/M1%E6%95%91%E7%A0%96%E8%AE%B0%E5%BD%95-%E7%84%8A%E6%AD%BB%E7%9A%84NAND/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://torotocat.github.io" target="_blank">TorontoCat's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Mac/">Mac</a><a class="post-meta__tags" href="/tags/%E7%A1%AC%E4%BB%B6/">硬件</a><a class="post-meta__tags" href="/tags/%E6%95%B0%E6%8D%AE%E6%81%A2%E5%A4%8D/">数据恢复</a><a class="post-meta__tags" href="/tags/%E7%BB%B4%E4%BF%AE/">维修</a><a class="post-meta__tags" href="/tags/%E8%B8%A9%E5%9D%91/">踩坑</a></div><div class="post-share"><div class="social-share" data-image="/images/covers/anime-girl-balletcore-20260913.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/09/13/%E5%A5%87%E6%80%AA%E4%BD%86%E6%88%90%E7%AB%8B%E7%9A%84%E9%97%AE%E9%A2%98/" title="奇怪但成立的问题：八个看起来荒谬、一查全是实证的提问"><img class="cover" src="/images/covers/anime-girl-mei-20260913.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">奇怪但成立的问题：八个看起来荒谬、一查全是实证的提问</div></div><div class="info-2"><div class="info-item-1">八个问出来像玩笑、查完全是可对账数字的问题：卵子的档位定价、牛顿的百万字炼金手稿、"天堂72处女"三层拼贴的来历、穿成崇祯的第一优先级、独居者倒地前的兜底链路、人形性爱机器人的真实市场盘子、"人妖活不过40"的原论文、以及一个穿帮到绷不住的钓鱼站</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div class="vcomment" id="vcomment"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="https://pbs.twimg.com/profile_images/1904178056278999040/ZlNAiRHg_400x400.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">TorontoCat</div><div class="author-info-description">关于哲学、前端开发、算法与生活的思考随笔</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">25</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">33</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/torotocat"><i class="fab fa-github"></i><span>GitHub</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/torotocat" target="_blank" title="GitHub"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来坐坐。这里存着读书、代码与生活里的零碎想法。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E7%97%87%E7%8A%B6%E4%B8%8E%E7%AC%AC%E4%B8%80%E4%B8%AA%E8%A6%81%E6%89%93%E7%A0%B4%E7%9A%84%E9%94%99%E8%A7%89"><span class="toc-number">1.</span> <span class="toc-text">一、症状与第一个要打破的错觉</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%B0%9D%E8%AF%95%EF%BC%9A%E6%81%A2%E5%A4%8D%E6%A8%A1%E5%BC%8F%E7%9B%B4%E6%8E%A5%E8%A3%85%E5%88%B0%E5%A4%96%E7%BD%AE%E7%9B%98"><span class="toc-number">2.</span> <span class="toc-text">二、第一次尝试：恢复模式直接装到外置盘</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%92%9E%E5%A2%99%E7%9A%84%E4%BD%8D%E7%BD%AE%E6%9A%B4%E9%9C%B2%E4%BA%86%E7%97%85%E6%A0%B9"><span class="toc-number">3.</span> <span class="toc-text">三、撞墙的位置暴露了病根</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%88%86%E6%B0%B4%E5%B2%AD%EF%BC%9Arevive-%E8%83%BD%E8%BF%87%EF%BC%8Crestore-%E5%BF%85%E6%8C%82"><span class="toc-number">4.</span> <span class="toc-text">四、分水岭：revive 能过，restore 必挂</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E8%AF%BB%E6%97%A5%E5%BF%97%EF%BC%9A%E7%B3%BB%E7%BB%9F%E5%85%B6%E5%AE%9E%E6%97%A9%E5%B0%B1%E5%91%8A%E8%AF%89%E4%BD%A0%E4%BA%86"><span class="toc-number">5.</span> <span class="toc-text">五、读日志：系统其实早就告诉你了</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%97%B6%E9%97%B4%E7%AA%97%EF%BC%9A%E8%83%BD%E8%BF%9B%E6%81%A2%E5%A4%8D%E6%A8%A1%E5%BC%8F-%E6%9C%80%E5%90%8E%E4%B8%80%E4%B8%AA%E8%AF%BB%E7%9B%98%E7%AA%97%E5%8F%A3"><span class="toc-number">6.</span> <span class="toc-text">六、时间窗：能进恢复模式 &#x3D; 最后一个读盘窗口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E4%BB%85%E5%89%A9%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%BD%AF%E4%BB%B6%E8%B7%AF%E7%BA%BF%EF%BC%8C%E9%83%BD%E5%86%99%E5%9C%A8%E8%BF%99%E9%87%8C"><span class="toc-number">7.</span> <span class="toc-text">七、仅剩的两条软件路线，都写在这里</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E7%BB%93%E8%AE%BA%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E2%80%9D%E6%95%91%E7%A0%96%E2%80%9D%E5%9C%A8%E8%BF%99%E5%8F%B0%E6%9C%BA%E5%99%A8%E4%B8%8A%E4%B8%8D%E6%88%90%E7%AB%8B"><span class="toc-number">8.</span> <span class="toc-text">八、结论：为什么”救砖”在这台机器上不成立</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E9%80%81%E4%BF%AE%E5%AE%9E%E5%BD%95%EF%BC%9A%E6%9C%80%E5%90%8E%E4%BF%AE%E7%9A%84%E6%98%AF%E7%A1%AC%E4%BB%B6"><span class="toc-number">9.</span> <span class="toc-text">九、送修实录：最后修的是硬件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E5%A4%8D%E7%9B%98%EF%BC%9A%E4%BA%94%E6%9D%A1%E8%83%BD%E7%9B%B4%E6%8E%A5%E5%A4%8D%E7%94%A8%E7%9A%84%E7%BB%8F%E9%AA%8C"><span class="toc-number">10.</span> <span class="toc-text">十、复盘：五条能直接复用的经验</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/09/13/M1%E6%95%91%E7%A0%96%E8%AE%B0%E5%BD%95-%E7%84%8A%E6%AD%BB%E7%9A%84NAND/" title="一块焊死的 NAND：M1 MacBook 救砖全过程，最后修的是硬件"><img src="/images/covers/anime-girl-balletcore-20260913.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="一块焊死的 NAND：M1 MacBook 救砖全过程，最后修的是硬件"/></a><div class="content"><a class="title" href="/2026/09/13/M1%E6%95%91%E7%A0%96%E8%AE%B0%E5%BD%95-%E7%84%8A%E6%AD%BB%E7%9A%84NAND/" title="一块焊死的 NAND：M1 MacBook 救砖全过程，最后修的是硬件">一块焊死的 NAND：M1 MacBook 救砖全过程，最后修的是硬件</a><time datetime="2026-09-13T02:20:00.000Z" title="发表于 2026-09-13 10:20:00">2026-09-13</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/13/%E5%A5%87%E6%80%AA%E4%BD%86%E6%88%90%E7%AB%8B%E7%9A%84%E9%97%AE%E9%A2%98/" title="奇怪但成立的问题：八个看起来荒谬、一查全是实证的提问"><img src="/images/covers/anime-girl-mei-20260913.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="奇怪但成立的问题：八个看起来荒谬、一查全是实证的提问"/></a><div class="content"><a class="title" href="/2026/09/13/%E5%A5%87%E6%80%AA%E4%BD%86%E6%88%90%E7%AB%8B%E7%9A%84%E9%97%AE%E9%A2%98/" title="奇怪但成立的问题：八个看起来荒谬、一查全是实证的提问">奇怪但成立的问题：八个看起来荒谬、一查全是实证的提问</a><time datetime="2026-09-12T16:50:00.000Z" title="发表于 2026-09-13 00:50:00">2026-09-13</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/12/%E5%8F%98%E7%BE%8E%E4%B8%8E%E5%8F%98%E5%B8%85-%E4%BD%8E%E5%89%AF%E4%BD%9C%E7%94%A8%E8%B7%AF%E7%BA%BF/" title="变美与变帅：不切骨、不放假体、低副作用的性价比路线"><img src="/images/covers/wallhaven-jeygp5.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="变美与变帅：不切骨、不放假体、低副作用的性价比路线"/></a><div class="content"><a class="title" href="/2026/09/12/%E5%8F%98%E7%BE%8E%E4%B8%8E%E5%8F%98%E5%B8%85-%E4%BD%8E%E5%89%AF%E4%BD%9C%E7%94%A8%E8%B7%AF%E7%BA%BF/" title="变美与变帅：不切骨、不放假体、低副作用的性价比路线">变美与变帅：不切骨、不放假体、低副作用的性价比路线</a><time datetime="2026-09-12T09:20:00.000Z" title="发表于 2026-09-12 17:20:00">2026-09-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/11/%E7%85%AE%E4%BA%86%E5%B0%B1%E5%90%83/" title="一个人住，煮了就吃的东西清单"><img src="/images/covers/wallhaven-1q23yg.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="一个人住，煮了就吃的东西清单"/></a><div class="content"><a class="title" href="/2026/09/11/%E7%85%AE%E4%BA%86%E5%B0%B1%E5%90%83/" title="一个人住，煮了就吃的东西清单">一个人住，煮了就吃的东西清单</a><time datetime="2026-09-11T08:25:00.000Z" title="发表于 2026-09-11 16:25:00">2026-09-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/12/04/%E4%BE%BF%E7%AD%BE-%E5%8E%86%E5%8F%B2%E7%AC%94%E8%AE%B0/" title="历史笔记"><img src="/images/covers/wallhaven-1q23yg.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="历史笔记"/></a><div class="content"><a class="title" href="/2025/12/04/%E4%BE%BF%E7%AD%BE-%E5%8E%86%E5%8F%B2%E7%AC%94%E8%AE%B0/" title="历史笔记">历史笔记</a><time datetime="2025-12-04T14:15:00.000Z" title="发表于 2025-12-04 22:15:00">2025-12-04</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/bg-cool-light.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By TorontoCat</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.1"></script><script src="/js/main.js?v=5.5.1"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+
+  const initValine = (el, path) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyValine = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const valineConfig = {
+      el: '#vcomment',
+      appId: 'XavaLunvYBFHw7runZ3ZyKkZ-gzGzoHsz',
+      appKey: 'e9yaf0yrdf3ZTXufNPandkPd',
+      avatar: 'monsterid',
+      serverURLs: '',
+      emojiMaps: "",
+      visitor: false,
+      ...option,
+      path: isShuoshuo ? path : (option && option.path) || window.location.pathname
+    }
+
+    new Valine(valineConfig)
+  }
+
+  const loadValine = async (el, path) => {
+    if (typeof Valine === 'function') {
+      initValine(el, path)
+    } else {
+      await btf.getScript('https://cdn.jsdelivr.net/npm/valine@1.5.3/dist/Valine.min.js')
+      initValine(el, path)
+    }
+  }
+
+  if (isShuoshuo) {
+    'Valine' === 'Valine'
+      ? window.shuoshuoComment = { loadComment: loadValine }
+      : window.loadOtherComment = loadValine
+    return
+  }
+
+  if ('Valine' === 'Valine' || !false) {
+    if (false) btf.loadComment(document.getElementById('vcomment'),loadValine)
+    else setTimeout(loadValine, 0)
+  } else {
+    window.loadOtherComment = loadValine
+  }
+})()</script></div><script src="/js/bg-route.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.1"></script></div></div></body></html>
